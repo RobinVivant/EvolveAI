@@ -43,8 +43,10 @@ class MetaAgent:
         plan = response_json['choices'][0]['message']['content']
         result = self.execute_plan(plan)
 
-        # Check if the result needs further processing
-        if "<FEEDBACK_REQUIRED>" in result:
+        # Check if the result is complete or needs further processing
+        if "<FEEDBACK_COMPLETE>" in result:
+            return result.replace("<FEEDBACK_COMPLETE>", "").strip()
+        elif "<FEEDBACK_REQUIRED>" in result:
             return self.feedback_loop(result, depth + 1)
         else:
             return result
@@ -150,6 +152,8 @@ Security Considerations:
 Your responses should be well-structured, detailing your thought process and the steps you're taking to solve the problem at hand. Always strive to provide the most efficient and accurate solution possible.
 
 If you believe your response requires further processing or refinement, include the tag '<FEEDBACK_REQUIRED>' in your response. This will trigger another iteration of processing, allowing you to improve upon your initial answer.
+
+If you are confident that your response is complete and no further processing is needed, include the tag '<FEEDBACK_COMPLETE>' in your response. This will signal that the feedback loop should end, and your response will be returned as the final answer.
 
 Container Information:
 - Container ID: {self.container_info['container_id']}
