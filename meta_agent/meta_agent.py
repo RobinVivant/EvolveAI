@@ -54,7 +54,8 @@ class MetaAgent:
         elif "<FEEDBACK_COMPLETE>" in result:
             return result.replace("<FEEDBACK_COMPLETE>", "").strip()
         elif "<FEEDBACK_REQUIRED>" in result:
-            return self.feedback_loop(original_query, result, depth + 1)
+            feedback_query = f"Original query: {original_query}\n\nCurrent result: {result}\n\nPlease refine or expand on this result."
+            return self.feedback_loop(original_query, feedback_query, depth + 1)
         else:
             return result
 
@@ -76,8 +77,11 @@ class MetaAgent:
             
             plan = plan[execute_end + len(execute_tag_end):]
         
-        aggregated_result = self.aggregate_results(result, original_query)
-        return aggregated_result if aggregated_result else plan
+        if result:
+            aggregated_result = self.aggregate_results(result, original_query)
+            return aggregated_result
+        else:
+            return plan
 
     def aggregate_results(self, results, original_query):
         if not results:
@@ -138,7 +142,7 @@ Provide a concise, fluid response that directly addresses the original query usi
 
     def generate_system_prompt(self):
         command_history = self.command_history.get_history()
-        history_str = "\n".join(command_history) if command_history else "No command history available yet."
+        history_str = "\n".join(f"- {cmd}" for cmd in command_history[-5:]) if command_history else "No command history available yet."
 
         prompt = f"""You are an advanced AI agent designed to process queries, solve complex problems, and operate within a containerized environment. Your core functionalities include:
 
@@ -183,9 +187,9 @@ You have access to the following environment variables:
 
 Use this information to tailor your responses and commands to the specific environment you're operating in.
 
-Command History:
+Recent Command History (last 5 commands):
 {history_str}
 
-Use the command history to inform your decisions and avoid repeating unnecessary commands.
+Use the command history to inform your decisions and avoid repeating unnecessary commands. If a similar command has been executed recently, consider using its output or building upon it instead of repeating the same command.
 """
         return prompt
