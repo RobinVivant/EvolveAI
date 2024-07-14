@@ -2,9 +2,10 @@ import os
 import docker
 from flask import Flask, request, jsonify
 from meta_agent import MetaAgent
+from config import Config
 
 app = Flask(__name__)
-meta_agent = MetaAgent()
+meta_agent = MetaAgent(Config.OPENROUTER_API_KEY, Config.OPENROUTER_MODEL)
 
 @app.route('/query', methods=['POST'])
 def process_query():
