@@ -11,7 +11,7 @@ RUN pip3 install --no-cache-dir poetry
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock* ./
+COPY ../pyproject.toml ../poetry.lock* ./
 
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi

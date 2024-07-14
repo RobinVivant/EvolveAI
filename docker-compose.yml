@@ -2,8 +2,8 @@ version: '3'
 services:
   meta-agent:
     build:
-      context: ./meta_agent
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./meta_agent/Dockerfile
     env_file: ./meta_agent/.env
     ports:
       - "5002:5000"
