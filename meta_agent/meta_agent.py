@@ -38,7 +38,7 @@ Security Considerations:
 
 Your responses should be well-structured, detailing your thought process and the steps you're taking to solve the problem at hand. Always strive to provide the most efficient and accurate solution possible.
 
-If you believe your response requires further processing or refinement, include the phrase 'FEEDBACK_REQUIRED' in your response. This will trigger another iteration of processing, allowing you to improve upon your initial answer."""
+If you believe your response requires further processing or refinement, include the tag '<FEEDBACK_REQUIRED>' in your response. This will trigger another iteration of processing, allowing you to improve upon your initial answer."""
         self.update_system_prompt()
 
     def process_query(self, query):
@@ -67,7 +67,7 @@ If you believe your response requires further processing or refinement, include 
         result = self.execute_plan(plan)
 
         # Check if the result needs further processing
-        if "FEEDBACK_REQUIRED" in result:
+        if "<FEEDBACK_REQUIRED>" in result:
             return self.feedback_loop(result, depth + 1)
         else:
             return result
@@ -128,7 +128,7 @@ If you believe your response requires further processing or refinement, include 
             self.system_prompt += f"\n\n{new_information}"
 
         # Update with available tools
-        tools_info = ", ".join([f"{tool}: {status}" for tool, status in self.tools.items()])
+        tools_info = " ".join([f"<TOOL name='{tool}' status='{status}'/>" for tool, status in self.tools.items()])
         self.system_prompt += f"\n\nAvailable tools: {tools_info}"
 
     def consult_expert(self, expert_name, instruction):
