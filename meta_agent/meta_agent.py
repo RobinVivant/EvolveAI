@@ -47,7 +47,7 @@ class MetaAgent:
             execute_end = plan.index(execute_tag_end)
             command = plan[execute_start + len(execute_tag_start):execute_end].strip()
             output = self.execute_shell_command(command)
-            result.append(f"Command output: {output}")
+            result.append(output)
             
             # Add command to history
             reasoning = plan[:execute_start].strip()  # Use the text before the command as reasoning
@@ -55,7 +55,21 @@ class MetaAgent:
             
             plan = plan[execute_end + len(execute_tag_end):]
         
-        return "\n".join(result) if result else plan
+        aggregated_result = self.aggregate_results(result)
+        return aggregated_result if aggregated_result else plan
+
+    def aggregate_results(self, results):
+        if not results:
+            return None
+        
+        prompt = f"Aggregate and summarize the following command outputs:\n\n{json.dumps(results, indent=2)}\n\nProvide a concise summary of the results."
+        messages = [
+            {"role": "system", "content": "You are a helpful AI assistant that aggregates and summarizes command outputs."},
+            {"role": "user", "content": prompt}
+        ]
+        
+        summary_client = LLMClient(self.llm_client.api_key, Config.OPENROUTER_SUMMARY_MODEL)
+        return summary_client.send_request(messages)
 
     @staticmethod
     def execute_shell_command(command):

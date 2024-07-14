@@ -30,8 +30,8 @@
 
             axios.post('/query', { query: query })
                 .then(function (response) {
-                    const formattedResponse = JSON.stringify(response.data, null, 2);
-                    responseElement.innerHTML = `<pre class="text-sm">${syntaxHighlight(formattedResponse)}</pre>`;
+                    const formattedResponse = formatResponse(response.data.response);
+                    responseElement.innerHTML = `<pre class="text-sm">${formattedResponse}</pre>`;
                 })
                 .catch(function (error) {
                     responseElement.innerHTML = `<pre class="text-sm text-red-500">Error: ${error.response.data.error}</pre>`;
@@ -39,6 +39,14 @@
                 .finally(function () {
                     loadingElement.classList.add('hidden');
                 });
+        }
+
+        function formatResponse(response) {
+            if (typeof response === 'object' && response !== null) {
+                return syntaxHighlight(JSON.stringify(response, null, 2));
+            } else {
+                return response;
+            }
         }
 
         function syntaxHighlight(json) {
