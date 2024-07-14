@@ -36,10 +36,18 @@ Security Considerations:
 - Sanitize all inputs to prevent injection attacks.
 - Be aware of the limitations and permissions of your containerized environment.
 
-Your responses should be well-structured, detailing your thought process and the steps you're taking to solve the problem at hand. Always strive to provide the most efficient and accurate solution possible."""
+Your responses should be well-structured, detailing your thought process and the steps you're taking to solve the problem at hand. Always strive to provide the most efficient and accurate solution possible.
+
+If you believe your response requires further processing or refinement, include the phrase 'FEEDBACK_REQUIRED' in your response. This will trigger another iteration of processing, allowing you to improve upon your initial answer."""
         self.update_system_prompt()
 
     def process_query(self, query):
+        return self.feedback_loop(query, 0)
+
+    def feedback_loop(self, query, depth):
+        if depth >= Config.MAX_RECURSION_DEPTH:
+            return "Maximum recursion depth reached. Final response: " + query
+
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
@@ -55,7 +63,14 @@ Your responses should be well-structured, detailing your thought process and the
             }
         )
         response_json = response.json()
-        return self.execute_plan(response_json['choices'][0]['message']['content'])
+        plan = response_json['choices'][0]['message']['content']
+        result = self.execute_plan(plan)
+
+        # Check if the result needs further processing
+        if "FEEDBACK_REQUIRED" in result:
+            return self.feedback_loop(result, depth + 1)
+        else:
+            return result
 
     def execute_plan(self, plan):
         # Implementation of plan execution
