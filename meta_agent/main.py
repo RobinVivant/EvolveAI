@@ -1,7 +1,8 @@
 import logging
 
-from config import Config
 from flask import Flask, request, jsonify
+
+from config import Config
 from meta_agent import MetaAgent
 
 app = Flask(__name__)
