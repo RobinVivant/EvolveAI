@@ -24,6 +24,7 @@
         <p class="mt-2 text-gray-600">Processing your query...</p>
     </div>
     <div id="stats" class="mt-4 text-sm text-gray-600">
+        <div id="modelStats" class="mb-2"></div>
         <button id="toggleStats" class="bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600 transition duration-300">
             Show Detailed Stats
         </button>
@@ -62,12 +63,28 @@
   function formatResponse(response) {
     if (typeof response === 'object' && response !== null) {
       const formattedResponse = marked.parse(response.response);
-      const stats = `
-                    <p>Total LLM Calls: ${response.stats.llm_calls}</p>
-                    <p>Total Latency: ${response.stats.total_latency.toFixed(2)}s</p>
-                    <p>Models Used: ${response.stats.models_used.join(', ')}</p>
-                `;
-      document.getElementById('stats').innerHTML = stats;
+      
+      const modelStats = response.stats.models_used.map(model => {
+        const modelCalls = response.stats.detailed_history.filter(call => call.model === model);
+        const totalLatency = modelCalls.reduce((sum, call) => sum + call.latency, 0);
+        return `
+          <div class="inline-block mr-2 mb-2">
+            <button class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full" onclick="toggleModelDetails('${model}')">
+              ${model} (${modelCalls.length})
+            </button>
+            <div id="${model}-details" class="hidden mt-1 bg-gray-100 p-2 rounded-md">
+              <p>Total Latency: ${totalLatency.toFixed(2)}s</p>
+              <ul>
+                ${modelCalls.map((call, index) => `
+                  <li>Call ${index + 1}: ${call.latency.toFixed(2)}s</li>
+                `).join('')}
+              </ul>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      document.getElementById('modelStats').innerHTML = modelStats;
       
       const detailedStats = response.stats.detailed_history.map((call, index) => `
         <div class="mb-2">
@@ -83,6 +100,11 @@
     } else {
       return marked.parse(response);
     }
+  }
+
+  function toggleModelDetails(model) {
+    const detailsElement = document.getElementById(`${model}-details`);
+    detailsElement.classList.toggle('hidden');
   }
 
   document.getElementById('toggleStats').addEventListener('click', function() {
