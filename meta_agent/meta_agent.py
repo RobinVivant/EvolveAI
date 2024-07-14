@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import subprocess
 
 from command_history import CommandHistory

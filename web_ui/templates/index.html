@@ -86,13 +86,15 @@
       
       document.getElementById('modelStats').innerHTML = modelStats;
       
-      const detailedStats = response.stats.detailed_history.map((call, index) => `
-        <div class="mb-2">
-          <strong>Call ${index + 1}:</strong>
-          <p>Model: ${call.model}</p>
-          <p>Latency: ${call.latency.toFixed(2)}s</p>
-        </div>
-      `).join('');
+      const detailedStats = response.stats && response.stats.detailed_history
+        ? response.stats.detailed_history.map((call, index) => `
+            <div class="mb-2">
+              <strong>Call ${index + 1}:</strong>
+              <p>Model: ${call.model}</p>
+              <p>Latency: ${call.latency.toFixed(2)}s</p>
+            </div>
+          `).join('')
+        : 'No detailed history available';
       
       document.getElementById('detailedStats').innerHTML = detailedStats;
       
