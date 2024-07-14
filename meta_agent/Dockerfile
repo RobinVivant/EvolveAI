@@ -11,11 +11,14 @@ RUN pip3 install --no-cache-dir poetry
 
 WORKDIR /app
 
-COPY ../pyproject.toml ../poetry.lock* ./
+COPY pyproject.toml poetry.lock* ./
 
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi
 
 COPY . .
 
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000", "--reload"]
+ENV FLASK_APP=meta_agent/main.py
+ENV FLASK_RUN_HOST=0.0.0.0
+
+CMD ["poetry", "run", "flask", "run", "--port=5000"]

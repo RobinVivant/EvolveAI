@@ -12,6 +12,7 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
+      - FLASK_APP=meta_agent/main.py
     networks:
       - meta-agent-network
 
