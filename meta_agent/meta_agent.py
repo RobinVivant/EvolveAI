@@ -77,10 +77,42 @@ class MetaAgent:
     def get_container_info(self):
         logging.info("Getting container info")
         try:
-            container_id = subprocess.check_output(['hostname']).decode('utf-8').strip()
-            inspect_result = subprocess.check_output(['docker', 'inspect', container_id]).decode('utf-8')
-            container_info = json.loads(inspect_result)[0]
-            logging.info(f"Container info retrieved successfully")
+            container_info = {}
+            
+            # Get container ID
+            container_info['container_id'] = subprocess.check_output(['hostname']).decode('utf-8').strip()
+            
+            # Get Linux distribution info
+            with open('/etc/os-release', 'r') as f:
+                os_release = dict(l.strip().split('=') for l in f if '=' in l)
+            container_info['os'] = {
+                'name': os_release.get('NAME', '').strip('"'),
+                'version': os_release.get('VERSION', '').strip('"'),
+                'id': os_release.get('ID', '').strip('"')
+            }
+            
+            # Get kernel version
+            container_info['kernel'] = subprocess.check_output(['uname', '-r']).decode('utf-8').strip()
+            
+            # Get installed packages
+            if container_info['os']['id'] in ['ubuntu', 'debian']:
+                packages = subprocess.check_output(['dpkg', '--get-selections']).decode('utf-8')
+            elif container_info['os']['id'] in ['centos', 'rhel', 'fedora']:
+                packages = subprocess.check_output(['rpm', '-qa']).decode('utf-8')
+            else:
+                packages = "Unable to determine package list for this OS"
+            container_info['installed_packages'] = packages.split('\n')
+            
+            # Get environment variables
+            container_info['environment'] = dict(os.environ)
+            
+            # Get current working directory
+            container_info['cwd'] = os.getcwd()
+            
+            # Get available shells
+            container_info['available_shells'] = subprocess.check_output(['cat', '/etc/shells']).decode('utf-8').split('\n')
+            
+            logging.info("Container info retrieved successfully")
             return container_info
         except Exception as e:
             logging.error(f"Error getting container info: {str(e)}")
@@ -116,8 +148,20 @@ Your responses should be well-structured, detailing your thought process and the
 If you believe your response requires further processing or refinement, include the tag '<FEEDBACK_REQUIRED>' in your response. This will trigger another iteration of processing, allowing you to improve upon your initial answer.
 
 Container Information:
+- Container ID: {self.container_info['container_id']}
+- Operating System: {self.container_info['os']['name']} {self.container_info['os']['version']}
+- Kernel Version: {self.container_info['kernel']}
+- Current Working Directory: {self.container_info['cwd']}
+- Available Shells: {', '.join(filter(None, self.container_info['available_shells']))}
+
+You have access to the following environment variables:
+{json.dumps(self.container_info['environment'], indent=2)}
+
+The container has the following packages installed:
+{json.dumps(self.container_info['installed_packages'][:10], indent=2)}  # Showing only first 10 for brevity
+
+Use this information to tailor your responses and commands to the specific environment you're operating in.
 """
-        prompt += json.dumps(self.container_info, indent=2)
         return prompt
 
     def consult_expert(self, expert_name, instruction):
