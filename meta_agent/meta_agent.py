@@ -5,20 +5,11 @@ from config import Config
 class MetaAgent:
     def __init__(self, api_key, model):
         self.client = docker.from_env()
-        self.container = self.create_container()
         self.tools = {}
         self.api_key = api_key
         self.model = model
         self.system_prompt = """You are Meta-Expert, an extremely clever expert with the unique ability to collaborate with multiple experts to tackle any task and solve complex problems. Your role is to oversee the communication between experts, effectively using their skills to answer given questions while applying your own critical thinking and verification abilities."""
         self.update_system_prompt()
-
-    def create_container(self):
-        return self.client.containers.run(
-            Config.DOCKER_IMAGE,
-            detach=True,
-            tty=True,
-            remove=True
-        )
 
     def process_query(self, query):
         response = requests.post(
@@ -65,15 +56,22 @@ class MetaAgent:
         if command_parts[0] not in allowed_commands:
             return f"Error: Command '{command_parts[0]}' is not allowed"
         
-        result = self.container.exec_run(command)
-        if result.exit_code != 0:
-            return f"Error executing command: {result.output.decode('utf-8')}"
-        return result.output.decode('utf-8')
+        container = self.client.containers.run(
+            Config.DOCKER_IMAGE,
+            command=command,
+            remove=True
+        )
+        return container.decode('utf-8')
 
     def install_tool(self, tool_name):
         # Implementation of tool installation
         command = f"apt-get update && apt-get install -y {tool_name}"
-        result = self.execute_shell_command(command)
+        container = self.client.containers.run(
+            Config.DOCKER_IMAGE,
+            command=command,
+            remove=True
+        )
+        result = container.decode('utf-8')
         if "Unable to locate package" in result:
             return f"Failed to install {tool_name}. Package not found."
         elif "0 newly installed" in result:
