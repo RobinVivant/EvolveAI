@@ -18,6 +18,7 @@ class MetaAgent:
         self.system_prompt = self.generate_system_prompt()
         self.stats = {
             "llm_calls": 0,
+            "summary_calls": 0,
             "total_latency": 0,
             "models_used": set()
         }
@@ -25,6 +26,7 @@ class MetaAgent:
     def process_query(self, query):
         self.stats = {
             "llm_calls": 0,
+            "summary_calls": 0,
             "total_latency": 0,
             "models_used": set()
         }
@@ -33,6 +35,7 @@ class MetaAgent:
             "response": response,
             "stats": {
                 "llm_calls": self.stats["llm_calls"],
+                "summary_calls": self.stats["summary_calls"],
                 "total_latency": self.stats["total_latency"],
                 "models_used": list(self.stats["models_used"])
             }
@@ -103,7 +106,10 @@ Provide a concise, fluid response that directly addresses the original query usi
         ]
 
         summary_client = LLMClient(self.llm_client.api_key, Config.OPENROUTER_SUMMARY_MODEL)
-        response, _ = summary_client.send_request(messages)
+        response, latency = summary_client.send_request(messages)
+        self.stats["summary_calls"] += 1
+        self.stats["total_latency"] += latency
+        self.stats["models_used"].add(Config.OPENROUTER_SUMMARY_MODEL)
         return response
 
     @staticmethod
