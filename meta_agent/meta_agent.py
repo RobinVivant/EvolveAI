@@ -41,17 +41,29 @@ class MetaAgent:
 
     def execute_plan(self, plan):
         # Implementation of plan execution
-        steps = plan.split('\n')
         result = []
-        for step in steps:
-            if step.startswith("Expert"):
-                expert_name, instruction = step.split(':', 1)
+        expert_tag_start = "<Expert>"
+        expert_tag_end = "</Expert>"
+        execute_tag_start = "<Execute>"
+        execute_tag_end = "</Execute>"
+        
+        while expert_tag_start in plan or execute_tag_start in plan:
+            if expert_tag_start in plan:
+                expert_start = plan.index(expert_tag_start)
+                expert_end = plan.index(expert_tag_end)
+                expert_content = plan[expert_start + len(expert_tag_start):expert_end].strip()
+                expert_name, instruction = expert_content.split(':', 1)
                 expert_response = self.consult_expert(expert_name.strip(), instruction.strip())
-                result.append(f"{expert_name}: {expert_response}")
-            elif step.startswith("Execute"):
-                _, command = step.split(':', 1)
-                output = self.execute_shell_command(command.strip())
+                result.append(f"Expert {expert_name}: {expert_response}")
+                plan = plan[expert_end + len(expert_tag_end):]
+            elif execute_tag_start in plan:
+                execute_start = plan.index(execute_tag_start)
+                execute_end = plan.index(execute_tag_end)
+                command = plan[execute_start + len(execute_tag_start):execute_end].strip()
+                output = self.execute_shell_command(command)
                 result.append(f"Command output: {output}")
+                plan = plan[execute_end + len(execute_tag_end):]
+        
         return "\n".join(result)
 
     @staticmethod
@@ -138,12 +150,18 @@ When you need to consult an expert, craft a specific system prompt for that expe
 - The specific task or question you want the expert to address
 
 To call an expert, use the following format:
-Expert [ExpertName]: [Your instruction or question for the expert]
+<Expert>[ExpertName]: [Your instruction or question for the expert]</Expert>
 
 For example:
-Expert PythonDeveloper: Analyze this Python code for potential improvements in efficiency and readability.
+<Expert>PythonDeveloper: Analyze this Python code for potential improvements in efficiency and readability.</Expert>
 
-The system will then generate a response as if it were that expert, based on the prompt you've crafted.
+To execute a shell command, use the following format:
+<Execute>[Your shell command]</Execute>
+
+For example:
+<Execute>ls -la</Execute>
+
+The system will then generate a response as if it were that expert or execute the shell command, based on the tags you've used.
 
 Security Considerations:
 - You have full access to the shell, but remain at the user level to avoid admin password requests.
