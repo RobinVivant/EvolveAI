@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import subprocess
 import re
 
@@ -191,6 +192,8 @@ Provide a concise, fluid response that directly addresses the original query usi
     @staticmethod
     def execute_shell_command(command):
         logging.info(f"Executing shell command: {command}")
+        # Remove square brackets if present
+        command = command.strip('[]')
         try:
             result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
             logging.info(f"Shell command output: {result.stdout}")
