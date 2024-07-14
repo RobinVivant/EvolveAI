@@ -28,7 +28,8 @@ class MetaAgent:
             "llm_calls": 0,
             "summary_calls": 0,
             "total_latency": 0,
-            "models_used": set()
+            "models_used": set(),
+            "detailed_history": []
         }
         response = self.feedback_loop(query, query, 0)
         return {
