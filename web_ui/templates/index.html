@@ -22,7 +22,7 @@
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
         <p class="mt-2 text-gray-600">Processing your query...</p>
     </div>
-    <div id="response" class="bg-gray-100 p-4 rounded-md overflow-auto max-h-96"></div>
+    <div id="response" class="bg-gray-100 p-4 rounded-md overflow-auto max-h-96 whitespace-pre-wrap"></div>
     <div id="stats" class="mt-4 text-sm text-gray-600"></div>
 </div>
 
@@ -50,14 +50,14 @@
 
   function formatResponse(response) {
     if (typeof response === 'object' && response !== null) {
-      const formattedResponse = syntaxHighlight(JSON.stringify(response.response, null, 2));
+      const formattedResponse = marked.parse(response.response);
       const stats = `
                     <p>LLM Calls: ${response.stats.llm_calls}</p>
                     <p>Total Latency: ${response.stats.total_latency.toFixed(2)}s</p>
                     <p>Models Used: ${response.stats.models_used.join(', ')}</p>
                 `;
       document.getElementById('stats').innerHTML = stats;
-      return marked.parse(formattedResponse);
+      return formattedResponse;
     } else {
       return marked.parse(response);
     }

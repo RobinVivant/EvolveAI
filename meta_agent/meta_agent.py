@@ -94,7 +94,7 @@ Original query: {original_query}
 Command outputs:
 {json.dumps(results, indent=2)}
 
-Provide a concise, fluid response that directly addresses the original query using the information from the command outputs. Your response should be in natural language, as if you're having a conversation with the user."""
+Provide a concise, fluid response that directly addresses the original query using the information from the command outputs. Your response should be in natural language, as if you're having a conversation with the user. Use Markdown formatting for better readability, including code blocks, lists, and emphasis where appropriate."""
 
         messages = [
             {"role": "system",
