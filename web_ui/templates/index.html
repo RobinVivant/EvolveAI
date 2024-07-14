@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta-Agent Web UI</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Meta-Agent Web UI</h1>
+    <textarea id="query" rows="4" cols="50" placeholder="Enter your query here"></textarea>
+    <br>
+    <button onclick="sendQuery()">Send Query</button>
+    <div id="response"></div>
+
+    <script>
+        function sendQuery() {
+            const query = document.getElementById('query').value;
+            axios.post('/query', { query: query })
+                .then(function (response) {
+                    document.getElementById('response').innerText = JSON.stringify(response.data, null, 2);
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+</html>
