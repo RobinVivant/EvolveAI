@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, jsonify
-import requests
 import logging
+
+import requests
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -10,9 +11,11 @@ META_AGENT_TIMEOUT = 300  # 5 minutes timeout
 
 app.logger.info(f"Meta-agent URL: {META_AGENT_URL}")
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/query', methods=['POST'])
 def query():
@@ -32,6 +35,7 @@ def query():
         if isinstance(e, requests.exceptions.Timeout):
             return jsonify({"error": "Request to meta-agent timed out."}), 504
         return jsonify({"error": "Unable to connect to meta-agent service."}), 503
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
