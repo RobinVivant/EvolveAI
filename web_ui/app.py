@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 import requests
+import logging
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
 
 META_AGENT_URL = 'http://meta-agent:5000/query'
 META_AGENT_TIMEOUT = 300  # 5 minutes timeout
@@ -16,8 +18,10 @@ def index():
 def query():
     user_query = request.json.get('query')
     try:
+        app.logger.info(f"Sending request to meta-agent: {user_query}")
         response = requests.post(META_AGENT_URL, json={'query': user_query}, timeout=META_AGENT_TIMEOUT)
         response.raise_for_status()
+        app.logger.info("Received response from meta-agent")
         return jsonify(response.json())
     except requests.exceptions.RequestException as e:
         app.logger.error(f"Error connecting to meta-agent: {str(e)}")
