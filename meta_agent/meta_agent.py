@@ -81,10 +81,9 @@ class MetaAgent:
     def get_container_info():
         logging.info("Getting container info")
         try:
-            container_info = {}
+            container_info = {'container_id': subprocess.check_output(['hostname']).decode('utf-8').strip()}
 
             # Get container ID
-            container_info['container_id'] = subprocess.check_output(['hostname']).decode('utf-8').strip()
 
             # Get Linux distribution info
             with open('/etc/os-release', 'r') as f:
