@@ -18,26 +18,26 @@ class MetaAgent:
         self.system_prompt = self.generate_system_prompt()
 
     def process_query(self, query):
-        return self.feedback_loop(query, 0)
+        return self.feedback_loop(query, query, 0)
 
-    def feedback_loop(self, query, depth):
+    def feedback_loop(self, original_query, current_query, depth):
         messages = [
             {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": query}
+            {"role": "user", "content": current_query}
         ]
         response = self.llm_client.send_request(messages)
-        result = self.execute_plan(response)
+        result = self.execute_plan(response, original_query)
 
         if depth + 1 >= Config.MAX_RECURSION_DEPTH:
             return result
         elif "<FEEDBACK_COMPLETE>" in result:
             return result.replace("<FEEDBACK_COMPLETE>", "").strip()
         elif "<FEEDBACK_REQUIRED>" in result:
-            return self.feedback_loop(result, depth + 1)
+            return self.feedback_loop(original_query, result, depth + 1)
         else:
             return result
 
-    def execute_plan(self, plan):
+    def execute_plan(self, plan, original_query):
         result = []
         execute_tag_start = "<Execute>"
         execute_tag_end = "</Execute>"
@@ -55,16 +55,24 @@ class MetaAgent:
             
             plan = plan[execute_end + len(execute_tag_end):]
         
-        aggregated_result = self.aggregate_results(result)
+        aggregated_result = self.aggregate_results(result, original_query)
         return aggregated_result if aggregated_result else plan
 
-    def aggregate_results(self, results):
+    def aggregate_results(self, results, original_query):
         if not results:
             return None
         
-        prompt = f"Aggregate and summarize the following command outputs:\n\n{json.dumps(results, indent=2)}\n\nProvide a concise summary of the results."
+        prompt = f"""Aggregate and summarize the following command outputs in the context of the original query:
+
+Original query: {original_query}
+
+Command outputs:
+{json.dumps(results, indent=2)}
+
+Provide a concise, fluid response that directly addresses the original query using the information from the command outputs. Your response should be in natural language, as if you're having a conversation with the user."""
+
         messages = [
-            {"role": "system", "content": "You are a helpful AI assistant that aggregates and summarizes command outputs."},
+            {"role": "system", "content": "You are a helpful AI assistant that aggregates command outputs and responds to user queries in a natural, conversational manner."},
             {"role": "user", "content": prompt}
         ]
         
