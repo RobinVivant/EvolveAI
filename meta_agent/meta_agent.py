@@ -13,7 +13,7 @@ class MetaAgent:
 
     def create_container(self):
         return self.client.containers.run(
-            "meta-agent-env",
+            Config.DOCKER_IMAGE,
             detach=True,
             tty=True,
             remove=True
@@ -57,6 +57,8 @@ class MetaAgent:
 
     def execute_shell_command(self, command):
         result = self.container.exec_run(command)
+        if result.exit_code != 0:
+            return f"Error executing command: {result.output.decode('utf-8')}"
         return result.output.decode('utf-8')
 
     def install_tool(self, tool_name):
