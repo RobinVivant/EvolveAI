@@ -22,4 +22,4 @@ def query():
         return jsonify({"error": "Unable to connect to meta-agent service. The request may have timed out."}), 503
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', port=5001, debug=True)
