@@ -1,7 +1,6 @@
 import logging
 import os
 import subprocess
-import json
 
 import docker
 
@@ -22,8 +21,6 @@ class MetaAgent:
         return self.feedback_loop(query, 0)
 
     def feedback_loop(self, query, depth):
-        if depth >= Config.MAX_RECURSION_DEPTH:
-            return "Maximum recursion depth reached. Final response: " + query
 
         messages = [
             {"role": "system", "content": self.system_prompt},
@@ -33,7 +30,9 @@ class MetaAgent:
         result = self.execute_plan(plan)
 
         # Check if the result is complete or needs further processing
-        if "<FEEDBACK_COMPLETE>" in result:
+        if depth + 1 >= Config.MAX_RECURSION_DEPTH:
+            return query
+        elif "<FEEDBACK_COMPLETE>" in result:
             return result.replace("<FEEDBACK_COMPLETE>", "").strip()
         elif "<FEEDBACK_REQUIRED>" in result:
             return self.feedback_loop(result, depth + 1)
