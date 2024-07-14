@@ -192,10 +192,32 @@ Use this information to tailor your responses and commands to the specific envir
         return prompt
 
     def consult_expert(self, expert_name, instruction):
-        # Consult an expert (which is actually the same LM with a different prompt)
-        expert_prompt = f"You are {expert_name}. {instruction}"
+        # Craft a comprehensive system prompt for the expert
+        expert_prompt = f"""You are {expert_name}, an expert AI assistant. Your task is to provide specialized knowledge and insights based on your expertise.
+
+Your capabilities and context:
+1. You have access to a wide range of knowledge in your field of expertise.
+2. You can analyze problems, provide solutions, and explain complex concepts in your domain.
+3. You are operating within a containerized environment with the following specifications:
+   - Container ID: {self.container_info['container_id']}
+   - Operating System: {self.container_info['os']['name']} {self.container_info['os']['version']}
+   - Kernel Version: {self.container_info['kernel']}
+
+Your role is to:
+1. Carefully analyze the given instruction or question.
+2. Provide a detailed, accurate, and helpful response based on your expertise.
+3. If necessary, break down complex problems into smaller, manageable steps.
+4. Explain your reasoning and provide examples when appropriate.
+5. If you need more information to provide an accurate answer, state what additional details would be helpful.
+
+Remember, your response will be used by a meta-agent to solve a larger problem or answer a more complex query. Ensure your answer is clear, concise, and directly addresses the given instruction.
+
+Instruction: {instruction}
+
+Please provide your expert response:"""
+
         messages = [
             {"role": "system", "content": expert_prompt},
-            {"role": "user", "content": instruction}
+            {"role": "user", "content": "Please respond to the instruction provided in the system prompt."}
         ]
         return self.llm_client.send_request(messages)
