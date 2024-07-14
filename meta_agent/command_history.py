@@ -10,6 +10,12 @@ class CommandHistory:
 
     def add_command(self, command, output, reasoning):
         summary = self.summarize(command, output, reasoning)
+        
+        if len(self.history) == Config.MAX_HISTORY_ITEMS:
+            oldest_summary = self.history[0]
+            pruned_summary = self.summarize_pruned(oldest_summary)
+            summary = f"[Pruned History Summary: {pruned_summary}] {summary}"
+        
         self.history.append(summary)
 
     def summarize(self, command, output, reasoning):
@@ -26,6 +32,19 @@ Provide a brief summary that captures the essence of the command, its output, an
 
         summary = self.summary_client.send_request(messages)
         return summary
+
+    def summarize_pruned(self, oldest_summary):
+        prompt = f"""Summarize the following pruned history item in a very concise manner:
+{oldest_summary}
+Provide a brief summary that captures the key points of this pruned history item."""
+
+        messages = [
+            {"role": "system", "content": "You are a helpful AI assistant that creates concise summaries of pruned history items."},
+            {"role": "user", "content": prompt}
+        ]
+
+        pruned_summary = self.summary_client.send_request(messages)
+        return pruned_summary
 
     def get_history(self):
         return list(self.history)
