@@ -1,11 +1,12 @@
 import logging
 import os
 import subprocess
+import json
 
 import docker
-import requests
 
 from config import Config
+from llm_client import LLMClient
 
 logging.basicConfig(level=logging.INFO)
 
@@ -13,8 +14,7 @@ logging.basicConfig(level=logging.INFO)
 class MetaAgent:
     def __init__(self, api_key, model):
         self.client = docker.from_env()
-        self.api_key = api_key
-        self.model = model
+        self.llm_client = LLMClient(api_key, model)
         self.container_info = self.get_container_info()
         self.system_prompt = self.generate_system_prompt()
 
@@ -25,22 +25,11 @@ class MetaAgent:
         if depth >= Config.MAX_RECURSION_DEPTH:
             return "Maximum recursion depth reached. Final response: " + query
 
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": query}
-                ]
-            }
-        )
-        response_json = response.json()
-        plan = response_json['choices'][0]['message']['content']
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": query}
+        ]
+        plan = self.llm_client.send_request(messages)
         result = self.execute_plan(plan)
 
         # Check if the result is complete or needs further processing
@@ -174,19 +163,8 @@ Use this information to tailor your responses and commands to the specific envir
     def consult_expert(self, expert_name, instruction):
         # Consult an expert (which is actually the same LM with a different prompt)
         expert_prompt = f"You are {expert_name}. {instruction}"
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": expert_prompt},
-                    {"role": "user", "content": instruction}
-                ]
-            }
-        )
-        response_json = response.json()
-        return response_json['choices'][0]['message']['content']
+        messages = [
+            {"role": "system", "content": expert_prompt},
+            {"role": "user", "content": instruction}
+        ]
+        return self.llm_client.send_request(messages)
