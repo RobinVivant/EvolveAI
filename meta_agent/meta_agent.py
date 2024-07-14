@@ -2,8 +2,11 @@ import docker
 import requests
 import subprocess
 import json
+import logging
 
 from config import Config
+
+logging.basicConfig(level=logging.INFO)
 
 
 class MetaAgent:
@@ -61,18 +64,25 @@ class MetaAgent:
         return "\n".join(result)
 
     def execute_shell_command(self, command):
+        logging.info(f"Executing shell command: {command}")
         try:
             result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+            logging.info(f"Shell command output: {result.stdout}")
             return result.stdout
         except subprocess.CalledProcessError as e:
+            logging.error(f"Error executing command: {e.stderr}")
             return f"Error executing command: {e.stderr}"
 
     def get_container_info(self):
+        logging.info("Getting container info")
         try:
             container_id = subprocess.check_output(['hostname']).decode('utf-8').strip()
             inspect_result = subprocess.check_output(['docker', 'inspect', container_id]).decode('utf-8')
-            return json.loads(inspect_result)[0]
+            container_info = json.loads(inspect_result)[0]
+            logging.info(f"Container info retrieved successfully")
+            return container_info
         except Exception as e:
+            logging.error(f"Error getting container info: {str(e)}")
             return f"Error getting container info: {str(e)}"
 
     def generate_system_prompt(self):
