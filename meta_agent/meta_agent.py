@@ -1,6 +1,7 @@
 import docker
 import subprocess
 import requests
+from config import Config
 
 class MetaAgent:
     def __init__(self, api_key, model):
