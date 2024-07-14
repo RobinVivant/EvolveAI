@@ -1,6 +1,8 @@
 import docker
 import requests
+
 from config import Config
+
 
 class MetaAgent:
     def __init__(self, api_key, model):
@@ -55,7 +57,7 @@ class MetaAgent:
         command_parts = command.split()
         if command_parts[0] not in allowed_commands:
             return f"Error: Command '{command_parts[0]}' is not allowed"
-        
+
         container = self.client.containers.run(
             Config.DOCKER_IMAGE,
             command=command,
@@ -83,7 +85,7 @@ class MetaAgent:
     def update_system_prompt(self, new_information=None):
         if new_information:
             self.system_prompt += f"\n\n{new_information}"
-        
+
         # Update with available tools
         tools_info = ", ".join([f"{tool}: {status}" for tool, status in self.tools.items()])
         self.system_prompt += f"\n\nAvailable tools: {tools_info}"
