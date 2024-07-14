@@ -45,7 +45,13 @@
         addToChatHistory(query, formattedResponse);
       })
       .catch(function (error) {
-        addToChatHistory(query, `<pre class="text-sm text-red-500">Error: ${error.response.data.error}</pre>`);
+        let errorMessage = 'An unexpected error occurred';
+        if (error.response && error.response.data && error.response.data.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        addToChatHistory(query, `<pre class="text-sm text-red-500">Error: ${errorMessage}</pre>`);
       })
       .finally(function () {
         loadingElement.classList.add('hidden');
