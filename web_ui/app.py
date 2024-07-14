@@ -3,7 +3,7 @@ import requests
 
 app = Flask(__name__)
 
-META_AGENT_URL = 'http://meta-agent:5000/query'
+META_AGENT_URL = 'http://meta-agent:5002/query'
 
 @app.route('/')
 def index():

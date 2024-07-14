@@ -62,7 +62,7 @@ Once the containers are running, you can interact with the Meta-Agent in two way
    - The response will be displayed on the page
 
 2. By sending POST requests directly to the Meta-Agent API:
-   - Send a POST request to `http://localhost:5000/query` with a JSON body containing the query:
+   - Send a POST request to `http://localhost:5002/query` with a JSON body containing the query:
      ```json
      {
          "query": "Your query here"
