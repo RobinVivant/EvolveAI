@@ -3,6 +3,7 @@ name = "meta-agent"
 version = "0.1.0"
 description = "A meta-agent application for processing queries and solving complex problems"
 authors = ["Your Name <you@example.com>"]
+packages = [{include = "meta_agent"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
