@@ -83,7 +83,7 @@ class MetaAgent:
                 output = "Error: Invalid command placeholder '[command]'. Please provide a specific command."
             else:
                 output = self.execute_shell_command(command)
-            result.append(output)
+            result.append({"command": command, "output": output})
 
             # Add command to history
             reasoning = plan[:execute_start].strip()  # Use the text before the command as reasoning
