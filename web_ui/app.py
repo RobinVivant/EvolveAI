@@ -6,6 +6,8 @@ app = Flask(__name__)
 META_AGENT_URL = 'http://meta-agent:5000/query'
 META_AGENT_TIMEOUT = 300  # 5 minutes timeout
 
+app.logger.info(f"Meta-agent URL: {META_AGENT_URL}")
+
 @app.route('/')
 def index():
     return render_template('index.html')

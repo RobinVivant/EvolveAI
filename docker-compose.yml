@@ -12,6 +12,8 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
+    networks:
+      - meta-agent-network
 
   web-ui:
     build:
@@ -26,3 +28,9 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
+    networks:
+      - meta-agent-network
+
+networks:
+  meta-agent-network:
+    driver: bridge
