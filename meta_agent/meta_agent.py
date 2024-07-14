@@ -5,6 +5,7 @@ import json
 
 from config import Config
 from llm_client import LLMClient
+from command_history import CommandHistory
 
 logging.basicConfig(level=logging.INFO)
 
@@ -12,6 +13,7 @@ logging.basicConfig(level=logging.INFO)
 class MetaAgent:
     def __init__(self, api_key, model):
         self.llm_client = LLMClient(api_key, model)
+        self.command_history = CommandHistory(api_key)
         self.container_info = self.get_container_info()
         self.system_prompt = self.generate_system_prompt()
 
@@ -46,6 +48,11 @@ class MetaAgent:
             command = plan[execute_start + len(execute_tag_start):execute_end].strip()
             output = self.execute_shell_command(command)
             result.append(f"Command output: {output}")
+            
+            # Add command to history
+            reasoning = plan[:execute_start].strip()  # Use the text before the command as reasoning
+            self.command_history.add_command(command, output, reasoning)
+            
             plan = plan[execute_end + len(execute_tag_end):]
         
         return "\n".join(result) if result else plan
@@ -87,6 +94,9 @@ class MetaAgent:
             return f"Error getting container info: {str(e)}"
 
     def generate_system_prompt(self):
+        command_history = self.command_history.get_history()
+        history_str = "\n".join(command_history) if command_history else "No command history available yet."
+
         prompt = f"""You are an advanced AI agent designed to process queries, solve complex problems, and operate within a containerized environment. Your core functionalities include:
 
 1. Query Processing: Understand and process natural language queries from users.
@@ -129,5 +139,10 @@ You have access to the following environment variables:
 {json.dumps(self.container_info['environment'], indent=2)}
 
 Use this information to tailor your responses and commands to the specific environment you're operating in.
+
+Command History:
+{history_str}
+
+Use the command history to inform your decisions and avoid repeating unnecessary commands.
 """
         return prompt
