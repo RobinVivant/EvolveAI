@@ -1,4 +1,5 @@
 import requests
+import time
 
 
 class LLMClient:
@@ -7,6 +8,7 @@ class LLMClient:
         self.model = model
 
     def send_request(self, messages):
+        start_time = time.time()
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
@@ -18,5 +20,7 @@ class LLMClient:
                 "messages": messages
             }
         )
+        end_time = time.time()
+        latency = end_time - start_time
         response_json = response.json()
-        return response_json['choices'][0]['message']['content']
+        return response_json['choices'][0]['message']['content'], latency

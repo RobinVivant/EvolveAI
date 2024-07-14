@@ -6,6 +6,7 @@
     <title>Meta-Agent Web UI</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl">
@@ -16,7 +17,8 @@
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
             <p class="mt-2 text-gray-600">Processing your query...</p>
         </div>
-        <div id="response" class="bg-gray-100 p-4 rounded-md whitespace-pre-wrap overflow-auto max-h-96"></div>
+        <div id="response" class="bg-gray-100 p-4 rounded-md overflow-auto max-h-96"></div>
+        <div id="stats" class="mt-4 text-sm text-gray-600"></div>
     </div>
 
     <script>
@@ -43,9 +45,16 @@
 
         function formatResponse(response) {
             if (typeof response === 'object' && response !== null) {
-                return syntaxHighlight(JSON.stringify(response, null, 2));
+                const formattedResponse = syntaxHighlight(JSON.stringify(response.response, null, 2));
+                const stats = `
+                    <p>LLM Calls: ${response.stats.llm_calls}</p>
+                    <p>Total Latency: ${response.stats.total_latency.toFixed(2)}s</p>
+                    <p>Models Used: ${response.stats.models_used.join(', ')}</p>
+                `;
+                document.getElementById('stats').innerHTML = stats;
+                return marked.parse(formattedResponse);
             } else {
-                return response;
+                return marked.parse(response);
             }
         }
 

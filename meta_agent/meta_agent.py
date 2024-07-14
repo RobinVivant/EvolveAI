@@ -16,16 +16,37 @@ class MetaAgent:
         self.command_history = CommandHistory(api_key)
         self.container_info = self.get_container_info()
         self.system_prompt = self.generate_system_prompt()
+        self.stats = {
+            "llm_calls": 0,
+            "total_latency": 0,
+            "models_used": set()
+        }
 
     def process_query(self, query):
-        return self.feedback_loop(query, query, 0)
+        self.stats = {
+            "llm_calls": 0,
+            "total_latency": 0,
+            "models_used": set()
+        }
+        response = self.feedback_loop(query, query, 0)
+        return {
+            "response": response,
+            "stats": {
+                "llm_calls": self.stats["llm_calls"],
+                "total_latency": self.stats["total_latency"],
+                "models_used": list(self.stats["models_used"])
+            }
+        }
 
     def feedback_loop(self, original_query, current_query, depth):
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": current_query}
         ]
-        response = self.llm_client.send_request(messages)
+        response, latency = self.llm_client.send_request(messages)
+        self.stats["llm_calls"] += 1
+        self.stats["total_latency"] += latency
+        self.stats["models_used"].add(self.llm_client.model)
         result = self.execute_plan(response, original_query)
 
         if depth + 1 >= Config.MAX_RECURSION_DEPTH:
@@ -144,7 +165,7 @@ Security Considerations:
 - Sanitize all inputs to prevent injection attacks.
 - Be aware of the limitations and permissions of your containerized environment.
 
-Your responses should be well-structured, detailing your thought process and the steps you're taking to solve the problem at hand. Always strive to provide the most efficient and accurate solution possible.
+Your responses should be well-structured, detailing your thought process and the steps you're taking to solve the problem at hand. Always strive to provide the most efficient and accurate solution possible. Write your responses using Markdown formatting for better readability.
 
 If you believe your response requires further processing or refinement, include the tag '<FEEDBACK_REQUIRED>' in your response. This will trigger another iteration of processing, allowing you to improve upon your initial answer.
 
