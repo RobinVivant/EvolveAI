@@ -6,7 +6,7 @@ services:
       dockerfile: ./meta_agent/Dockerfile
     env_file: ./meta_agent/.env
     ports:
-      - "5002:5000"
+      - "5000:5000"
 
   web-ui:
     build:
