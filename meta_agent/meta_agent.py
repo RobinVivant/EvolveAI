@@ -64,6 +64,9 @@ class MetaAgent:
         execute_tag_start = "<Execute>"
         execute_tag_end = "</Execute>"
         
+        if execute_tag_start not in plan:
+            return plan  # Return the original plan if no execute tags are found
+        
         while execute_tag_start in plan:
             execute_start = plan.index(execute_tag_start)
             execute_end = plan.index(execute_tag_end)
@@ -77,11 +80,8 @@ class MetaAgent:
             
             plan = plan[execute_end + len(execute_tag_end):]
         
-        if result:
-            aggregated_result = self.aggregate_results(result, original_query)
-            return aggregated_result
-        else:
-            return plan
+        aggregated_result = self.aggregate_results(result, original_query)
+        return aggregated_result if aggregated_result else plan
 
     def aggregate_results(self, results, original_query):
         if not results:

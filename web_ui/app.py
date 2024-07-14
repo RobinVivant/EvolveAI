@@ -22,7 +22,11 @@ def query():
         response = requests.post(META_AGENT_URL, json={'query': user_query}, timeout=META_AGENT_TIMEOUT)
         response.raise_for_status()
         app.logger.info("Received response from meta-agent")
-        return jsonify(response.json())
+        try:
+            return jsonify(response.json())
+        except ValueError:
+            app.logger.error("Error decoding JSON from meta-agent response")
+            return jsonify({"error": "Invalid response from meta-agent"}), 500
     except requests.exceptions.RequestException as e:
         app.logger.error(f"Error connecting to meta-agent: {str(e)}")
         return jsonify({"error": "Unable to connect to meta-agent service. The request may have timed out."}), 503
