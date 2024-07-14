@@ -16,7 +16,7 @@
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
             <p class="mt-2 text-gray-600">Processing your query...</p>
         </div>
-        <div id="response" class="bg-gray-100 p-4 rounded-md whitespace-pre-wrap"></div>
+        <div id="response" class="bg-gray-100 p-4 rounded-md whitespace-pre-wrap overflow-auto max-h-96"></div>
     </div>
 
     <script>
@@ -26,18 +26,38 @@
             const responseElement = document.getElementById('response');
 
             loadingElement.classList.remove('hidden');
-            responseElement.innerText = '';
+            responseElement.innerHTML = '';
 
             axios.post('/query', { query: query })
                 .then(function (response) {
-                    responseElement.innerText = JSON.stringify(response.data, null, 2);
+                    const formattedResponse = JSON.stringify(response.data, null, 2);
+                    responseElement.innerHTML = `<pre class="text-sm">${syntaxHighlight(formattedResponse)}</pre>`;
                 })
                 .catch(function (error) {
-                    responseElement.innerText = 'Error: ' + error.response.data.error;
+                    responseElement.innerHTML = `<pre class="text-sm text-red-500">Error: ${error.response.data.error}</pre>`;
                 })
                 .finally(function () {
                     loadingElement.classList.add('hidden');
                 });
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'text-blue-600';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'text-red-600';
+                    } else {
+                        cls = 'text-green-600';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'text-purple-600';
+                } else if (/null/.test(match)) {
+                    cls = 'text-gray-600';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
         }
     </script>
 </body>
