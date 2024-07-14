@@ -5,6 +5,10 @@ from meta_agent import MetaAgent
 from config import Config
 
 app = Flask(__name__)
+
+if not Config.OPENROUTER_API_KEY:
+    raise ValueError("OPENROUTER_API_KEY is not set in the environment variables.")
+
 meta_agent = MetaAgent(Config.OPENROUTER_API_KEY, Config.OPENROUTER_MODEL)
 
 @app.route('/query', methods=['POST'])
