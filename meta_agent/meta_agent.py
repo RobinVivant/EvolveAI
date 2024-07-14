@@ -160,7 +160,7 @@ Container Information:
 - Operating System: {self.container_info['os']['name']} {self.container_info['os']['version']}
 - Kernel Version: {self.container_info['kernel']}
 - Current Working Directory: {self.container_info['cwd']}
-- Available Shells: {', '.join(filter(None, self.container_info['available_shells']))}
+- Available Shells: {', '.join([shell for shell in self.container_info['available_shells'] if shell])}
 
 You have access to the following environment variables:
 {json.dumps(self.container_info['environment'], indent=2)}
