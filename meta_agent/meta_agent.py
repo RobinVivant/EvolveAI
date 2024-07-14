@@ -1,8 +1,8 @@
 import json
 import logging
 import os
-import re
 import subprocess
+import re
 
 from command_history import CommandHistory
 from config import Config
@@ -101,7 +101,7 @@ class MetaAgent:
 
         temp_history = []
         final_result = self.recursive_aggregate(results, original_query, temp_history)
-        
+
         # Check if any commands failed and need to be retried
         failed_commands = [r for r in results if "Error" in r["output"]]
         if failed_commands:
