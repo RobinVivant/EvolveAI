@@ -68,9 +68,6 @@ class MetaAgent:
             return f"Error executing command: {result.output.decode('utf-8')}"
         return result.output.decode('utf-8')
 
-    def update_system_prompt(self, new_information):
-        self.system_prompt += f"\n\n{new_information}"
-
     def install_tool(self, tool_name):
         # Implementation of tool installation
         command = f"apt-get update && apt-get install -y {tool_name}"
@@ -83,8 +80,11 @@ class MetaAgent:
             self.tools[tool_name] = "Installed"
             return f"Successfully installed {tool_name}."
 
-    def update_system_prompt(self):
-        # Implementation of system prompt update
+    def update_system_prompt(self, new_information=None):
+        if new_information:
+            self.system_prompt += f"\n\n{new_information}"
+        
+        # Update with available tools
         tools_info = ", ".join([f"{tool}: {status}" for tool, status in self.tools.items()])
         self.system_prompt += f"\n\nAvailable tools: {tools_info}"
 
