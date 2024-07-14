@@ -57,10 +57,19 @@ class MetaAgent:
         return "\n".join(result)
 
     def execute_shell_command(self, command):
+        # Implement a whitelist of allowed commands
+        allowed_commands = ['ls', 'cat', 'echo', 'pwd']
+        command_parts = command.split()
+        if command_parts[0] not in allowed_commands:
+            return f"Error: Command '{command_parts[0]}' is not allowed"
+        
         result = self.container.exec_run(command)
         if result.exit_code != 0:
             return f"Error executing command: {result.output.decode('utf-8')}"
         return result.output.decode('utf-8')
+
+    def update_system_prompt(self, new_information):
+        self.system_prompt += f"\n\n{new_information}"
 
     def install_tool(self, tool_name):
         # Implementation of tool installation
