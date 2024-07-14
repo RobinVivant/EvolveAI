@@ -1,5 +1,4 @@
 import docker
-import subprocess
 import requests
 from config import Config
 
