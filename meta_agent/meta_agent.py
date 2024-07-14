@@ -18,9 +18,9 @@ class MetaAgent:
         self.system_prompt = self.generate_system_prompt()
         self.stats = {
             "llm_calls": 0,
-            "summary_calls": 0,
             "total_latency": 0,
-            "models_used": set()
+            "models_used": set(),
+            "detailed_history": []
         }
 
     def process_query(self, query):
@@ -50,6 +50,10 @@ class MetaAgent:
         self.stats["llm_calls"] += 1
         self.stats["total_latency"] += latency
         self.stats["models_used"].add(self.llm_client.model)
+        self.stats["detailed_history"].append({
+            "model": self.llm_client.model,
+            "latency": latency
+        })
         result = self.execute_plan(response, original_query)
 
         if depth + 1 >= Config.MAX_RECURSION_DEPTH:
@@ -90,6 +94,37 @@ class MetaAgent:
         if not results:
             return "No results were produced from the executed commands."
 
+        temp_history = []
+        final_result = self.recursive_aggregate(results, original_query, temp_history)
+        
+        # Prompt for final result in <result> tag block
+        final_prompt = f"""Based on the original query and the aggregated results, provide a final response.
+        Enclose your response in <result> tags.
+
+        Original query: {original_query}
+
+        Aggregated results:
+        {final_result}"""
+
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": final_prompt}
+        ]
+
+        final_response, latency = self.llm_client.send_request(messages)
+        self.stats["llm_calls"] += 1
+        self.stats["total_latency"] += latency
+        self.stats["models_used"].add(self.llm_client.model)
+
+        # Extract content between <result> tags
+        import re
+        result_match = re.search(r'<result>(.*?)</result>', final_response, re.DOTALL)
+        if result_match:
+            return result_match.group(1).strip()
+        else:
+            return final_response
+
+    def recursive_aggregate(self, results, original_query, temp_history):
         prompt = f"""Aggregate and summarize the following command outputs in the context of the original query:
 
 Original query: {original_query}
@@ -97,20 +132,27 @@ Original query: {original_query}
 Command outputs:
 {json.dumps(results, indent=2)}
 
-Provide a concise, fluid response that directly addresses the original query using the information from the command outputs. Your response should be in natural language, as if you're having a conversation with the user. Use Markdown formatting for better readability, including code blocks, lists, and emphasis where appropriate."""
+Temporary history:
+{json.dumps(temp_history, indent=2)}
+
+Provide a concise, fluid response that directly addresses the original query using the information from the command outputs and temporary history."""
 
         messages = [
-            {"role": "system",
-             "content": "You are a helpful AI assistant that aggregates command outputs and responds to user queries in a natural, conversational manner."},
+            {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": prompt}
         ]
 
-        summary_client = LLMClient(self.llm_client.api_key, Config.OPENROUTER_SUMMARY_MODEL)
-        response, latency = summary_client.send_request(messages)
-        self.stats["summary_calls"] += 1
+        response, latency = self.llm_client.send_request(messages)
+        self.stats["llm_calls"] += 1
         self.stats["total_latency"] += latency
-        self.stats["models_used"].add(Config.OPENROUTER_SUMMARY_MODEL)
-        return response
+        self.stats["models_used"].add(self.llm_client.model)
+
+        temp_history.append({"prompt": prompt, "response": response})
+
+        if "<FEEDBACK_REQUIRED>" in response:
+            return self.recursive_aggregate(results, original_query, temp_history)
+        else:
+            return response
 
     @staticmethod
     def execute_shell_command(command):
