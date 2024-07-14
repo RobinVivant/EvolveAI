@@ -79,7 +79,10 @@ class MetaAgent:
             execute_start = plan.index(execute_tag_start)
             execute_end = plan.index(execute_tag_end)
             command = plan[execute_start + len(execute_tag_start):execute_end].strip()
-            output = self.execute_shell_command(command)
+            if command == "[command]":
+                output = "Error: Invalid command placeholder '[command]'. Please provide a specific command."
+            else:
+                output = self.execute_shell_command(command)
             result.append(output)
 
             # Add command to history
@@ -98,6 +101,35 @@ class MetaAgent:
         temp_history = []
         final_result = self.recursive_aggregate(results, original_query, temp_history)
         
+        # Check if any commands failed and need to be retried
+        failed_commands = [r for r in results if "Error" in r["output"]]
+        if failed_commands:
+            retry_prompt = f"""Some commands failed during execution. Please analyze the errors and suggest corrected commands to retry.
+            Original query: {original_query}
+            Failed commands:
+            {json.dumps(failed_commands, indent=2)}
+            
+            Provide your suggestions in <Execute> tags."""
+
+            messages = [
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": retry_prompt}
+            ]
+
+            retry_response, latency = self.llm_client.send_request(messages)
+            self.stats["llm_calls"] += 1
+            self.stats["total_latency"] += latency
+            self.stats["models_used"].add(self.llm_client.model)
+
+            # Extract and execute retry commands
+            retry_commands = re.findall(r'<Execute>(.*?)</Execute>', retry_response, re.DOTALL)
+            for command in retry_commands:
+                output = self.execute_shell_command(command.strip())
+                results.append({"command": command.strip(), "output": output})
+
+            # Reaggregate results after retries
+            final_result = self.recursive_aggregate(results, original_query, temp_history)
+
         # Prompt for final result in <result> tag block
         final_prompt = f"""Based on the original query and the aggregated results, provide a final response.
         Enclose your response in <result> tags.
