@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta-Agent Web UI</title>
+    <title>Evolve AI</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-<div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl">
-    <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">Meta-Agent Web UI</h1>
+<body class="bg-gray-100 min-h-screen flex flex-col p-4">
+<div class="bg-white rounded-lg shadow-lg p-8 w-full">
+    <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">Evolve AI</h1>
+    <div id="chat-history" class="mb-4 overflow-auto max-h-96"></div>
     <textarea id="query" rows="4"
               class="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your query here"></textarea>
@@ -22,7 +23,6 @@
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
         <p class="mt-2 text-gray-600">Processing your query...</p>
     </div>
-    <div id="response" class="bg-gray-100 p-4 rounded-md overflow-auto max-h-96 whitespace-pre-wrap"></div>
     <div id="stats" class="mt-4 text-sm text-gray-600"></div>
 </div>
 
@@ -30,21 +30,21 @@
   function sendQuery() {
     const query = document.getElementById('query').value;
     const loadingElement = document.getElementById('loading');
-    const responseElement = document.getElementById('response');
+    const chatHistoryElement = document.getElementById('chat-history');
 
     loadingElement.classList.remove('hidden');
-    responseElement.innerHTML = '';
 
     axios.post('/query', {query: query})
       .then(function (response) {
         const formattedResponse = formatResponse(response.data.response);
-        responseElement.innerHTML = `<pre class="text-sm">${formattedResponse}</pre>`;
+        addToChatHistory(query, formattedResponse);
       })
       .catch(function (error) {
-        responseElement.innerHTML = `<pre class="text-sm text-red-500">Error: ${error.response.data.error}</pre>`;
+        addToChatHistory(query, `<pre class="text-sm text-red-500">Error: ${error.response.data.error}</pre>`);
       })
       .finally(function () {
         loadingElement.classList.add('hidden');
+        document.getElementById('query').value = '';
       });
   }
 
@@ -61,6 +61,21 @@
     } else {
       return marked.parse(response);
     }
+  }
+
+  function addToChatHistory(query, response) {
+    const chatHistoryElement = document.getElementById('chat-history');
+    const queryElement = document.createElement('div');
+    queryElement.className = 'mb-4 p-2 bg-blue-100 rounded-md';
+    queryElement.innerHTML = `<strong>You:</strong> ${query}`;
+    
+    const responseElement = document.createElement('div');
+    responseElement.className = 'mb-4 p-2 bg-gray-100 rounded-md';
+    responseElement.innerHTML = `<strong>Evolve AI:</strong> ${response}`;
+    
+    chatHistoryElement.appendChild(queryElement);
+    chatHistoryElement.appendChild(responseElement);
+    chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
   }
 
   function syntaxHighlight(json) {
