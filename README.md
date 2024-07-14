@@ -45,12 +45,21 @@ The Meta-Agent application consists of several key components:
 
 ### Building and Running the Docker Containers
 
-1. Build and run the Docker containers using Docker Compose:
+1. Build and run the Docker containers:
+
+   For Docker Compose V1 (older versions):
    ```
    docker-compose up --build
    ```
 
+   For Docker Compose V2 (newer versions, integrated into Docker CLI):
+   ```
+   docker compose up --build
+   ```
+
 This command builds both the Meta-Agent and Web UI containers, starts them, and sets up the necessary network connections.
+
+Note: If you encounter a "command not found" error with `docker-compose`, try using `docker compose` (without a hyphen) as it's the newer syntax integrated into the Docker CLI.
 
 ## Usage
 
