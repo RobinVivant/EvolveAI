@@ -18,4 +18,4 @@ RUN poetry config virtualenvs.create false \
 
 COPY . .
 
-CMD ["python", "meta_agent/main.py"]
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000", "--reload"]

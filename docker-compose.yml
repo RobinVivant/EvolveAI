@@ -7,6 +7,11 @@ services:
     env_file: ./meta_agent/.env
     ports:
       - "5002:5000"
+    volumes:
+      - ./meta_agent:/app/meta_agent
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
 
   web-ui:
     build:
