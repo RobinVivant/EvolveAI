@@ -1,5 +1,5 @@
 import requests
-from config import Config
+
 
 class LLMClient:
     def __init__(self, api_key, model):

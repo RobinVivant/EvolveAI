@@ -1,6 +1,7 @@
 from collections import deque
-from llm_client import LLMClient
+
 from config import Config
+from llm_client import LLMClient
 
 
 class CommandHistory:
@@ -10,12 +11,12 @@ class CommandHistory:
 
     def add_command(self, command, output, reasoning):
         summary = self.summarize(command, output, reasoning)
-        
+
         if len(self.history) == Config.MAX_HISTORY_ITEMS:
             oldest_summary = self.history[0]
             pruned_summary = self.summarize_pruned(oldest_summary)
             summary = f"[Pruned History Summary: {pruned_summary}] {summary}"
-        
+
         self.history.append(summary)
 
     def summarize(self, command, output, reasoning):
@@ -39,7 +40,8 @@ Provide a brief summary that captures the essence of the command, its output, an
 Provide a brief summary that captures the key points of this pruned history item."""
 
         messages = [
-            {"role": "system", "content": "You are a helpful AI assistant that creates concise summaries of pruned history items."},
+            {"role": "system",
+             "content": "You are a helpful AI assistant that creates concise summaries of pruned history items."},
             {"role": "user", "content": prompt}
         ]
 
