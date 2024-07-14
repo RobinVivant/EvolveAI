@@ -85,7 +85,7 @@ class MetaAgent:
 
     def aggregate_results(self, results, original_query):
         if not results:
-            return None
+            return "No results were produced from the executed commands."
         
         prompt = f"""Aggregate and summarize the following command outputs in the context of the original query:
 
@@ -102,7 +102,8 @@ Provide a concise, fluid response that directly addresses the original query usi
         ]
         
         summary_client = LLMClient(self.llm_client.api_key, Config.OPENROUTER_SUMMARY_MODEL)
-        return summary_client.send_request(messages)
+        response, _ = summary_client.send_request(messages)
+        return response
 
     @staticmethod
     def execute_shell_command(command):

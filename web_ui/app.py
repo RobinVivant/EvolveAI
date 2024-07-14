@@ -28,8 +28,10 @@ def query():
             app.logger.error("Error decoding JSON from meta-agent response")
             return jsonify({"error": "Invalid response from meta-agent"}), 500
     except requests.exceptions.RequestException as e:
-        app.logger.error(f"Error connecting to meta-agent: {str(e)}")
-        return jsonify({"error": "Unable to connect to meta-agent service. The request may have timed out."}), 503
+        app.logger.error(f"Error connecting to meta-agent: {str(e)}", exc_info=True)
+        if isinstance(e, requests.exceptions.Timeout):
+            return jsonify({"error": "Request to meta-agent timed out."}), 504
+        return jsonify({"error": "Unable to connect to meta-agent service."}), 503
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
