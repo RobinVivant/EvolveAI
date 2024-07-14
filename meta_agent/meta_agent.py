@@ -1,8 +1,9 @@
-import docker
-import requests
-import subprocess
 import json
 import logging
+import subprocess
+
+import docker
+import requests
 
 from config import Config
 
