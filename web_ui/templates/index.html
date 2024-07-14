@@ -9,73 +9,78 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl">
-        <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">Meta-Agent Web UI</h1>
-        <textarea id="query" rows="4" class="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your query here"></textarea>
-        <button onclick="sendQuery()" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition duration-300 mb-4">Send Query</button>
-        <div id="loading" class="hidden text-center mb-4">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-            <p class="mt-2 text-gray-600">Processing your query...</p>
-        </div>
-        <div id="response" class="bg-gray-100 p-4 rounded-md overflow-auto max-h-96"></div>
-        <div id="stats" class="mt-4 text-sm text-gray-600"></div>
+<div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl">
+    <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">Meta-Agent Web UI</h1>
+    <textarea id="query" rows="4"
+              class="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your query here"></textarea>
+    <button onclick="sendQuery()"
+            class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition duration-300 mb-4">Send
+        Query
+    </button>
+    <div id="loading" class="hidden text-center mb-4">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+        <p class="mt-2 text-gray-600">Processing your query...</p>
     </div>
+    <div id="response" class="bg-gray-100 p-4 rounded-md overflow-auto max-h-96"></div>
+    <div id="stats" class="mt-4 text-sm text-gray-600"></div>
+</div>
 
-    <script>
-        function sendQuery() {
-            const query = document.getElementById('query').value;
-            const loadingElement = document.getElementById('loading');
-            const responseElement = document.getElementById('response');
+<script>
+  function sendQuery() {
+    const query = document.getElementById('query').value;
+    const loadingElement = document.getElementById('loading');
+    const responseElement = document.getElementById('response');
 
-            loadingElement.classList.remove('hidden');
-            responseElement.innerHTML = '';
+    loadingElement.classList.remove('hidden');
+    responseElement.innerHTML = '';
 
-            axios.post('/query', { query: query })
-                .then(function (response) {
-                    const formattedResponse = formatResponse(response.data.response);
-                    responseElement.innerHTML = `<pre class="text-sm">${formattedResponse}</pre>`;
-                })
-                .catch(function (error) {
-                    responseElement.innerHTML = `<pre class="text-sm text-red-500">Error: ${error.response.data.error}</pre>`;
-                })
-                .finally(function () {
-                    loadingElement.classList.add('hidden');
-                });
-        }
+    axios.post('/query', {query: query})
+      .then(function (response) {
+        const formattedResponse = formatResponse(response.data.response);
+        responseElement.innerHTML = `<pre class="text-sm">${formattedResponse}</pre>`;
+      })
+      .catch(function (error) {
+        responseElement.innerHTML = `<pre class="text-sm text-red-500">Error: ${error.response.data.error}</pre>`;
+      })
+      .finally(function () {
+        loadingElement.classList.add('hidden');
+      });
+  }
 
-        function formatResponse(response) {
-            if (typeof response === 'object' && response !== null) {
-                const formattedResponse = syntaxHighlight(JSON.stringify(response.response, null, 2));
-                const stats = `
+  function formatResponse(response) {
+    if (typeof response === 'object' && response !== null) {
+      const formattedResponse = syntaxHighlight(JSON.stringify(response.response, null, 2));
+      const stats = `
                     <p>LLM Calls: ${response.stats.llm_calls}</p>
                     <p>Total Latency: ${response.stats.total_latency.toFixed(2)}s</p>
                     <p>Models Used: ${response.stats.models_used.join(', ')}</p>
                 `;
-                document.getElementById('stats').innerHTML = stats;
-                return marked.parse(formattedResponse);
-            } else {
-                return marked.parse(response);
-            }
-        }
+      document.getElementById('stats').innerHTML = stats;
+      return marked.parse(formattedResponse);
+    } else {
+      return marked.parse(response);
+    }
+  }
 
-        function syntaxHighlight(json) {
-            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                var cls = 'text-blue-600';
-                if (/^"/.test(match)) {
-                    if (/:$/.test(match)) {
-                        cls = 'text-red-600';
-                    } else {
-                        cls = 'text-green-600';
-                    }
-                } else if (/true|false/.test(match)) {
-                    cls = 'text-purple-600';
-                } else if (/null/.test(match)) {
-                    cls = 'text-gray-600';
-                }
-                return '<span class="' + cls + '">' + match + '</span>';
-            });
+  function syntaxHighlight(json) {
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+      var cls = 'text-blue-600';
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = 'text-red-600';
+        } else {
+          cls = 'text-green-600';
         }
-    </script>
+      } else if (/true|false/.test(match)) {
+        cls = 'text-purple-600';
+      } else if (/null/.test(match)) {
+        cls = 'text-gray-600';
+      }
+      return '<span class="' + cls + '">' + match + '</span>';
+    });
+  }
+</script>
 </body>
 </html>

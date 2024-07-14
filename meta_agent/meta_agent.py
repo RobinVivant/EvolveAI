@@ -1,11 +1,11 @@
+import json
 import logging
 import os
 import subprocess
-import json
 
+from command_history import CommandHistory
 from config import Config
 from llm_client import LLMClient
-from command_history import CommandHistory
 
 logging.basicConfig(level=logging.INFO)
 
@@ -63,30 +63,30 @@ class MetaAgent:
         result = []
         execute_tag_start = "<Execute>"
         execute_tag_end = "</Execute>"
-        
+
         if execute_tag_start not in plan:
             return plan  # Return the original plan if no execute tags are found
-        
+
         while execute_tag_start in plan:
             execute_start = plan.index(execute_tag_start)
             execute_end = plan.index(execute_tag_end)
             command = plan[execute_start + len(execute_tag_start):execute_end].strip()
             output = self.execute_shell_command(command)
             result.append(output)
-            
+
             # Add command to history
             reasoning = plan[:execute_start].strip()  # Use the text before the command as reasoning
             self.command_history.add_command(command, output, reasoning)
-            
+
             plan = plan[execute_end + len(execute_tag_end):]
-        
+
         aggregated_result = self.aggregate_results(result, original_query)
         return aggregated_result if aggregated_result else plan
 
     def aggregate_results(self, results, original_query):
         if not results:
             return "No results were produced from the executed commands."
-        
+
         prompt = f"""Aggregate and summarize the following command outputs in the context of the original query:
 
 Original query: {original_query}
@@ -97,10 +97,11 @@ Command outputs:
 Provide a concise, fluid response that directly addresses the original query using the information from the command outputs. Your response should be in natural language, as if you're having a conversation with the user."""
 
         messages = [
-            {"role": "system", "content": "You are a helpful AI assistant that aggregates command outputs and responds to user queries in a natural, conversational manner."},
+            {"role": "system",
+             "content": "You are a helpful AI assistant that aggregates command outputs and responds to user queries in a natural, conversational manner."},
             {"role": "user", "content": prompt}
         ]
-        
+
         summary_client = LLMClient(self.llm_client.api_key, Config.OPENROUTER_SUMMARY_MODEL)
         response, _ = summary_client.send_request(messages)
         return response
@@ -133,7 +134,8 @@ Provide a concise, fluid response that directly addresses the original query usi
             container_info['kernel'] = subprocess.check_output(['uname', '-r']).decode('utf-8').strip()
             container_info['environment'] = dict(os.environ)
             container_info['cwd'] = os.getcwd()
-            container_info['available_shells'] = subprocess.check_output(['cat', '/etc/shells']).decode('utf-8').split('\n')
+            container_info['available_shells'] = subprocess.check_output(['cat', '/etc/shells']).decode('utf-8').split(
+                '\n')
 
             logging.info("Container info retrieved successfully")
             return container_info
@@ -143,7 +145,8 @@ Provide a concise, fluid response that directly addresses the original query usi
 
     def generate_system_prompt(self):
         command_history = self.command_history.get_history()
-        history_str = "\n".join(f"- {cmd}" for cmd in command_history[-5:]) if command_history else "No command history available yet."
+        history_str = "\n".join(
+            f"- {cmd}" for cmd in command_history[-5:]) if command_history else "No command history available yet."
 
         prompt = f"""You are an advanced AI agent designed to process queries, solve complex problems, and operate within a containerized environment. Your core functionalities include:
 
