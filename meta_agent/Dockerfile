@@ -13,8 +13,14 @@ WORKDIR /app/meta_agent
 
 COPY pyproject.toml poetry.lock* /app/
 
+# Add this line to copy requirements.txt
+COPY requirements.txt /app/
+
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi
+
+# Add this line to install requirements
+RUN pip install -r /app/requirements.txt
 
 COPY . /app/
 
