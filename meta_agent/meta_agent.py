@@ -52,6 +52,11 @@ class MetaAgent:
                 _, command = step.split(':', 1)
                 output = self.execute_shell_command(command.strip())
                 result.append(f"Command output: {output}")
+            elif step.startswith("Install"):
+                _, tool = step.split(':', 1)
+                install_result = self.install_tool(tool.strip())
+                result.append(f"Tool installation: {install_result}")
+                self.update_system_prompt()  # Update system prompt after tool installation
         return "\n".join(result)
 
     def execute_shell_command(self, command):
