@@ -26,7 +26,14 @@ class LLMClient:
             end_time = time.time()
             latency = end_time - start_time
             response_json = response.json()
-            return response_json['choices'][0]['message']['content'], latency
+            try:
+                return response_json['choices'][0]['message']['content'], latency
+            except (KeyError, IndexError) as e:
+                logging.error(f"Error parsing LLM response: {str(e)}")
+                raise ValueError("Unexpected response format from LLM")
         except requests.exceptions.RequestException as e:
             logging.error(f"Error sending request to LLM: {str(e)}")
             raise
+        except json.JSONDecodeError as e:
+            logging.error(f"Error decoding JSON response: {str(e)}")
+            raise ValueError("Invalid JSON response from LLM")
