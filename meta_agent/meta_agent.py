@@ -8,9 +8,10 @@ class MetaAgent:
         self.client = docker.from_env()
         self.container = self.create_container()
         self.tools = {}
-        self.system_prompt = self.generate_system_prompt()
         self.api_key = api_key
         self.model = model
+        self.system_prompt = """You are Meta-Expert, an extremely clever expert with the unique ability to collaborate with multiple experts to tackle any task and solve complex problems. Your role is to oversee the communication between experts, effectively using their skills to answer given questions while applying your own critical thinking and verification abilities."""
+        self.update_system_prompt()
 
     def create_container(self):
         return self.client.containers.run(
@@ -19,9 +20,6 @@ class MetaAgent:
             tty=True,
             remove=True
         )
-
-    def generate_system_prompt(self):
-        return """You are Meta-Expert, an extremely clever expert with the unique ability to collaborate with multiple experts to tackle any task and solve complex problems. Your role is to oversee the communication between experts, effectively using their skills to answer given questions while applying your own critical thinking and verification abilities."""
 
     def process_query(self, query):
         response = requests.post(
