@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import subprocess
@@ -65,7 +64,8 @@ class MetaAgent:
                 result.append(f"Command output: {output}")
         return "\n".join(result)
 
-    def execute_shell_command(self, command):
+    @staticmethod
+    def execute_shell_command(command):
         logging.info(f"Executing shell command: {command}")
         try:
             result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
@@ -75,14 +75,15 @@ class MetaAgent:
             logging.error(f"Error executing command: {e.stderr}")
             return f"Error executing command: {e.stderr}"
 
-    def get_container_info(self):
+    @staticmethod
+    def get_container_info():
         logging.info("Getting container info")
         try:
             container_info = {}
-            
+
             # Get container ID
             container_info['container_id'] = subprocess.check_output(['hostname']).decode('utf-8').strip()
-            
+
             # Get Linux distribution info
             with open('/etc/os-release', 'r') as f:
                 os_release = dict(l.strip().split('=') for l in f if '=' in l)
@@ -91,10 +92,10 @@ class MetaAgent:
                 'version': os_release.get('VERSION', '').strip('"'),
                 'id': os_release.get('ID', '').strip('"')
             }
-            
+
             # Get kernel version
             container_info['kernel'] = subprocess.check_output(['uname', '-r']).decode('utf-8').strip()
-            
+
             # Get installed packages
             if container_info['os']['id'] in ['ubuntu', 'debian']:
                 packages = subprocess.check_output(['dpkg', '--get-selections']).decode('utf-8')
@@ -103,23 +104,25 @@ class MetaAgent:
             else:
                 packages = "Unable to determine package list for this OS"
             container_info['installed_packages'] = packages.split('\n')
-            
+
             # Get environment variables
             container_info['environment'] = dict(os.environ)
-            
+
             # Get current working directory
             container_info['cwd'] = os.getcwd()
-            
+
             # Get available shells
-            container_info['available_shells'] = subprocess.check_output(['cat', '/etc/shells']).decode('utf-8').split('\n')
-            
+            container_info['available_shells'] = subprocess.check_output(['cat', '/etc/shells']).decode('utf-8').split(
+                '\n')
+
             logging.info("Container info retrieved successfully")
             return container_info
         except Exception as e:
             logging.error(f"Error getting container info: {str(e)}")
             return f"Error getting container info: {str(e)}"
 
-    def generate_system_prompt(self):
+    @staticmethod
+    def generate_system_prompt():
         prompt = """You are Meta-Expert, an advanced AI agent designed to process queries, solve complex problems, and continuously improve your capabilities within a containerized environment. Your core functionalities include:
 
 1. Query Processing: Understand and process natural language queries from users.
