@@ -25,8 +25,8 @@ def process_query():
         response = meta_agent.process_query(query)
         return jsonify({"response": response})
     except Exception as e:
-        logging.error(f"Error processing query: {str(e)}")
-        return jsonify({"error": "An error occurred while processing the query"}), 500
+        logging.exception(f"Error processing query: {str(e)}")
+        return jsonify({"error": f"An error occurred while processing the query: {str(e)}"}), 500
 
 
 if __name__ == '__main__':
